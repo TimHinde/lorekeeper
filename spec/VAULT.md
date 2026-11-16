@@ -34,7 +34,8 @@ my-campaign/
 ├── table/                   what happened at this table
 │   ├── party.md
 │   ├── sessions/
-│   └── notes/
+│   ├── notes/
+│   └── prep/                prep sheets (free-form, not validated)
 ├── ideas/                   generated material, same type folders as canon/
 └── .ingest/
     └── manifest.json        ingestion progress
@@ -78,7 +79,8 @@ format version bump.
 ## 4. Identity and files
 
 - An entity's ID is `<type>/<slug>`, for example `npc/vessa-thorn`.
-- The slug is lowercase ASCII, words joined by hyphens.
+- The slug is lowercase ASCII, words joined by hyphens, with a leading "the", "a" or
+  "an" dropped: "The Brine Choir" is `faction/brine-choir`.
 - The file lives at `<layer>/<type>/<slug>.md`.
 - IDs are unique within a layer. An idea may reuse a canon ID only when it is a
   variant of that entity, and must say so in `based_on`.
@@ -222,13 +224,37 @@ When two sources disagree, keep both and flag it:
    likely-but-uncertain match is written as a new entity and listed for review.
 2. **Frontmatter lists** (`aliases`, `tags`, `related`, `sources`) are unioned.
 3. **Frontmatter scalars** keep the existing value. A differing new value is recorded
-   as a conflict in the body.
+   under `## Notes` as "Sources disagree on `field`: kept X; this source gives Y",
+   cited to the new source.
 4. **`summary`** keeps the existing value unless the fragment sets `summary_replace: true`.
 5. **Body sections** are appended to. A bullet identical to an existing one is
    dropped. Nothing is removed.
 6. **Stat blocks** from different sources or systems sit side by side.
 
-Canon is append-only for tools. Only the GM deletes.
+Canon is append-only for tools. Only the GM deletes, with one exception:
+`lk merge <duplicate> <keep>` folds a duplicate that ingestion itself created into
+the entity it duplicates, keeps the old name as an alias, deletes the duplicate and
+repoints every reference to it.
+
+After a run, upsert makes a second pass over everything it touched: a `[[Name]]`
+link or an ID that misses only by a leading article is pointed at the entity that
+now exists.
+
+### Fragments
+
+Upsert's input. A fragment file is a run of entities, each opening with its own
+`---` frontmatter block, in the same format as an entity file with these
+differences:
+
+- `type` and `name` are required; `summary` is required only for a new entity.
+- `id` is optional (derived from type and name); `layer` comes from the command
+  (`canon` unless `--layer ideas`).
+- `sources` is optional and is derived from the citations in the body.
+- Any subset of fields and sections may appear. Text before the first `##`
+  heading goes into the type's first section.
+- `summary_replace: true` lets a fragment overwrite the summary.
+- A line of `---` always starts the next fragment, so fragments cannot use it as a
+  horizontal rule.
 
 ## 8. Other files
 
@@ -373,6 +399,8 @@ sources:
 ````
 
 ## 13. Open points for version 1
+
+- Whether `table/prep/` sheets should get frontmatter and an index entry.
 
 - Whether `scene` needs an explicit ordering field for linear adventures, or
   `chapter` plus page order is enough.
