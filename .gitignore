@@ -1,32 +1,24 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 venv/
+.venv/
 
-# Environment
-.env
+# Release artefacts
+dist/
 
-# IDE
+# Vaults hold text from books people bought. Never commit one.
+**/vault.yaml
+vaults/
+*-digest/
+*.zip
+
+# Test output
+/tmp/
+
+# Editors and OS
 .vscode/
 .idea/
-
-# Output directories (generated vaults)
-out_*/
-test_obsidian_output/
-
-# Obsidian metadata
 .obsidian/
-
-# Copyrighted / user-specific content
-LastOwlbear/
-chapter1_text.txt
-run_log.txt
-
-# Adventure-specific scripts (user workspace only)
-parse_last_owlbear.py
-process_chapter_1.py
-
-# OS
 .DS_Store
 Thumbs.db

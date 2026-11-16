@@ -1,0 +1,11 @@
+{
+  "name": "lorekeeper",
+  "owner": { "name": "Tim Hinde" },
+  "plugins": [
+    {
+      "name": "lorekeeper",
+      "source": "./",
+      "description": "Campaign vaults for game masters: ingest books, ask questions, build encounters, prep and log sessions."
+    }
+  ]
+}

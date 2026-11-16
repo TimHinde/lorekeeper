@@ -1,6 +1,6 @@
 # Lorekeeper — design
 
-*Placeholder name. Successor to Tome-MCP. Status: draft, 2026-11-16.*
+*Placeholder name. Successor to Tome-MCP. Status: phases 0–3 built, untested on real books, 2026-11-16.*
 
 ## What it is
 
@@ -85,14 +85,17 @@ after that.
 ```
 lorekeeper/
 ├── DESIGN.md
+├── .claude-plugin/           plugin and marketplace manifests
 ├── spec/VAULT.md              format contract, versioned
 ├── scripts/
-│   ├── pdf_probe.py           TOC, document type guess, chunk plan
-│   ├── pdf_extract.py         layout-aware text, page images, bad-page flags
+│   ├── pdftools.py            probe (TOC, kind, chunk plan) and layout-aware extraction
 │   ├── upsert_entity.py       merge a fragment into the vault
 │   ├── validate.py            check a vault against the spec
+│   ├── lk.py                  single CLI entry point for everything below
+│   ├── vaultlib.py            shared spec constants and parsing
 │   ├── build_index.py         regenerate _index/ and INDEX.md
-│   └── build_digest.py        bundle a vault for Project upload
+│   ├── build_digest.py        bundle a vault for Project upload
+│   └── build_dist.py          plugin zip and standalone skill zips
 ├── skills/
 │   ├── ingest-book/
 │   ├── ask-the-vault/

@@ -1,123 +1,118 @@
-# Tome
+# Lorekeeper
 
-**Parse any TTRPG adventure PDF into a ready-to-use Obsidian vault.**
+*Working name.* Turn the tabletop RPG books you own into a campaign vault, then use
+it to prep: ask questions, build encounters, plan and log sessions. Works with any
+game system.
 
-> **Important Note:** Tome's purpose is to *parse human-written content*, **not** generate new AI content. It simply uses AI to help extract and organize existing text from your adventure modules into structured notes.
+Lorekeeper is a set of Claude skills plus a small Python CLI. Claude reads the book;
+the scripts do the bookkeeping: chunking, page citations, merging, linking,
+validation. There are no API keys and no server to run.
 
-Tome is a local MCP (Model Context Protocol) server that helps Game Masters process existing tabletop RPG materials. It acts as a librarian: parsing, organizing, and reformatting content from adventure books into interconnected, searchable Obsidian notes.
+It grew out of [Tome](https://github.com/TimHinde/Tome-MCP). What changed and why is
+in [DESIGN.md](DESIGN.md).
 
-## Quick Start
+## What you get
+
+A **vault**: a folder of markdown files, one per NPC, place, faction, creature,
+item, scene, piece of lore or hook.
+
+```
+my-campaign/
+├── INDEX.md          start here
+├── _index/           one table per type, plus backlinks
+├── sources/          one file per book: outline and chapter summaries
+├── canon/            what the books say, every fact with its page
+├── table/            what happened at your table: sessions, party, changes
+└── ideas/            encounters and NPCs generated for your campaign
+```
+
+Every fact from a book carries its page, like `[salt-wake p.12]`, so you can check
+it. Generated material lives apart from the books, so the vault never blurs the two.
+The files are plain markdown with frontmatter and `[[links]]`, so they also open
+nicely in Obsidian.
+
+The format is specified in [spec/VAULT.md](spec/VAULT.md).
+
+## Skills
+
+| Skill | Use it to |
+|---|---|
+| `ingest-book` | Add a PDF to the vault. Resumable across conversations for long books. |
+| `ask-the-vault` | Ask about your campaign: "who knows about the cult?", "what's behind the crypt door?" |
+| `build-encounter` | Get encounter options built from the vault, and save the ones you like to `ideas/`. |
+| `prep-session` | Get a one-page prep sheet for the next session. |
+| `log-session` | Record what happened: session log, changed NPCs and places, what the party learned. |
+
+## Install
+
+**As a plugin** (Claude Code, and apps that support plugins):
+
+```
+/plugin marketplace add TimHinde/lorekeeper
+/plugin install lorekeeper@lorekeeper
+```
+
+**As individual skills** (apps where you upload skills one by one): run
+`python scripts/build_dist.py` and upload the zips from `dist/skills/`. Each one
+carries its own copy of the scripts.
+
+The scripts need Python 3.10+ with `PyMuPDF` and `PyYAML`
+(`pip install -r requirements.txt`). Claude installs them if they are missing.
+
+## Use
+
+**Ingest a book.** Attach the PDF and ask Claude to ingest it. Claude probes the
+book, shows you the chunk plan, works through it, and hands you back the vault as a
+zip, or writes it to a folder you have connected. For your next book, attach the
+vault zip and the new PDF together.
+
+**Prep with skills.** Attach the vault zip (or connect its folder) and ask.
+
+**Prep in a Claude Project.** Run `python scripts/lk.py digest --vault <dir>`,
+upload the files it writes, and paste `PROJECT-INSTRUCTIONS.md` into the Project
+instructions. After each session, re-upload `table.md`.
+
+## The CLI
+
+Every deterministic step is a subcommand of `scripts/lk.py`:
+
+| Command | Does |
+|---|---|
+| `init <dir> --name …` | Create an empty vault |
+| `probe <pdf>` | Register a book: outline, kind, chunk plan |
+| `next` | Show the next chunk to read |
+| `extract <pdf> --chunk N` | Write a chunk's text with page markers; render unreliable pages as images |
+| `upsert <fragments…>` | Merge entity fragments into the vault |
+| `merge <dup> <keep>` | Fold a duplicate into another entity |
+| `find <words>` / `show <id>` | Search and print entities |
+| `session` / `note <id>` | Start a session log / a table note |
+| `validate` | Check the vault against the spec |
+| `index` / `digest` | Rebuild indexes / bundle for a Claude Project |
+| `pack` / `unpack` | Zip and unzip a vault |
+| `status` | Progress and duplicates to review |
+
+## Develop
 
 ```bash
-# Run the MCP server (stdio transport, for use with Claude Desktop, Gemini, etc.)
-venv/bin/python server.py
-
-# Run tests
-venv/bin/python -m unittest test_obsidian.py -v
+pip install -r requirements.txt
+python -m unittest discover -s tests -v
+python scripts/build_dist.py
 ```
 
-Environment variables (`.env` file at project root):
-- `GEMINI_API_KEY` — required for entity extraction with Gemini (default)
-- `ANTHROPIC_API_KEY` — required for entity extraction with Claude
-- `OPENAI_API_KEY` — required for entity extraction with OpenAI (gpt-4o)
+Tests build a small invented adventure PDF on the fly (`tests/make_fixture.py`), so
+no copyrighted material is needed. `packs/` holds system material carried over from
+Tome that has not been ported yet.
 
-## Integrating with Chat Apps (For Non-Technical Users)
+## Copyright
 
-You can easily use Tome directly within your favorite AI chat applications using the Model Context Protocol (MCP). Here's how to set it up:
+Vaults contain text from books you bought. They are for your own use: the repo's
+`.gitignore` excludes them, and no part of Lorekeeper uploads them anywhere.
+Lorekeeper ships tooling only, never book content.
 
-### Claude Desktop
-1. Open Claude Desktop.
-2. Go to **Settings** -> **Developer** and click **Edit Config**.
-3. This will open the `claude_desktop_config.json` file. Add the following to the `mcpServers` section:
-   ```json
-   {
-     "mcpServers": {
-       "tome": {
-         "command": "/absolute/path/to/Tome/venv/bin/python",
-         "args": ["/absolute/path/to/Tome/server.py"],
-         "env": {
-           "GEMINI_API_KEY": "your_gemini_key_here",
-           "OPENAI_API_KEY": "your_openai_key_here",
-           "ANTHROPIC_API_KEY": "your_anthropic_key_here"
-         }
-       }
-     }
-   }
-   ```
-   *(Make sure to replace `/absolute/path/to/Tome` with the actual path to your Tome folder, and fill in at least one API key).*
-4. Save the file and restart Claude Desktop.
+> This work includes material from the System Reference Document 5.2 ("SRD 5.2") by
+> Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2
+> is licensed under the Creative Commons Attribution 4.0 International License.
 
-### Cursor
-1. Open Cursor and go to **Settings**.
-2. Search for **MCP** or go to the **Features** -> **MCP** section.
-3. Click **+ Add new MCP server**.
-4. Set the Type to **command**.
-5. Set the Name to `tome`.
-6. Set the Command to: `/absolute/path/to/Tome/venv/bin/python /absolute/path/to/Tome/server.py`
-7. Click Save. (Make sure you have your API keys set in a `.env` file in the Tome project root).
+## Licence
 
-### Roo Code / Cline
-1. Open the Roo Code settings panel.
-2. Go to the **MCP Servers** tab.
-3. Edit the `mcp_settings.json` file with the same configuration block shown above for Claude Desktop.
-
-## The Pipeline
-
-Tome processes adventures through a 3-step pipeline:
-
-```
-Adventure PDF → Extract Entities → Enrich with References → Obsidian Vault
-```
-
-### Step 1: Extract Entities (`extract_entities_llm`)
-Send raw adventure text to an LLM (Gemini, Claude, or OpenAI). Returns structured JSON with chapters containing NPCs, Locations, Encounters, Events, Items, and Monsters.
-
-### Step 2: Enrich with References (`enrich_with_references`)
-Walks through extracted entities and cross-references them against local reference material (e.g. the D&D 5.2e SRD). Injects statblocks and rules text directly into the data. *Optional — works with any system's reference docs.*
-
-### Step 3: Generate Obsidian (`generate_obsidian`)
-Writes the enriched data to disk as a nested Obsidian vault with:
-- **YAML frontmatter** with `chapter`, `location`, `motivation`, `monsters`, `rarity` fields for Dataview queries
-- **`[[wikilinks]]`** connecting entities across the vault
-- **`_Home.md`** index page with static summary tables and live Dataview query blocks
-- **Chapter folders** with subfolders for NPCs, Locations, Encounters, Events, Items, Monsters
-
-## MCP Tools
-
-| Tool | Purpose |
-|---|---|
-| `analyze_pdf` | Extract TOC and detect document type from a PDF |
-| `extract_pdf_text` | Extract raw text from a page range |
-| `extract_entities_with_llm` | LLM-powered entity extraction → structured JSON |
-| `enrich_entities` | Cross-reference entities against local reference material |
-| `generate_obsidian_markdown` | Write enriched entities as an Obsidian vault |
-| `query_references` | Search local reference markdown files |
-| `list_references` | List available reference topics |
-
-## Entity Model
-
-- **NPCs:** Name, Motivation, Secret, Statblock Reference, Location
-- **Locations:** Name, Read-Aloud Description, Encounters, Loot, Exits
-- **Encounters:** Name, Read-Aloud, Description, Mechanics, Monsters, NPCs Present
-- **Events:** Name, Description, Mechanics, Next Steps
-- **Items:** Name, Rarity, Description, Mechanics
-- **Monsters:** Name, Statblock
-
-## Reference Material
-
-The D&D 5.2e SRD ships as the default reference pack in `references/SRD/`. Tome is system-agnostic — you can point the `reference_dir` parameter at any folder of markdown files to use reference material from Pathfinder, Call of Cthulhu, or any other system.
-
-> *This work includes material from the System Reference Document 5.2 ("SRD 5.2") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2 is licensed under the Creative Commons Attribution 4.0 International License.*
-
-## Architecture
-
-```
-server.py              FastMCP entrypoint — registers all tools
-├── pdf_tools.py       PDF → text (PyMuPDF)
-├── reference_tools.py Local reference search (header-priority regex)
-└── obsidian_tools.py  LLM extraction + enrichment + Obsidian generation
-```
-
-## Privacy
-
-RPG materials are often copyrighted. Tome processes everything locally. The only external call is the LLM API for entity extraction.
+GPL-3.0, inherited from Tome.

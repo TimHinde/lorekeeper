@@ -1,0 +1,9 @@
+{
+  "name": "lorekeeper",
+  "version": "0.1.0",
+  "description": "Turn the tabletop RPG books you own into a cited, system-agnostic campaign vault, then ask questions, build encounters, prep and log sessions against it.",
+  "author": { "name": "Tim Hinde" },
+  "repository": "https://github.com/TimHinde/lorekeeper",
+  "license": "GPL-3.0",
+  "keywords": ["ttrpg", "rpg", "game-master", "campaign", "pdf", "obsidian"]
+}
